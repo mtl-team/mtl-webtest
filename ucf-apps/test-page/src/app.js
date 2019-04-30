@@ -1,19 +1,25 @@
 /**
  * 入口、导入组件样式、渲染
  */
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import {render} from 'react-dom';
-import { Form, Icon, Button, Label, FormControl } from 'tinper-bee';
+import {Form, Icon, Button, Label, FormControl} from 'tinper-bee';
+
 const FormItem = Form.FormItem;
+import 'tinper-bee/assets/tinper-bee.css'
 import 'static/others/mtl.ncc.js'
+
 const appId = 'sso';
-mtl.writeUCGConfig(appId,{
-  // host: 'ma-gateway.test.app.yyuap.com',
-  ishttps: false,
-  default_tp: 'none'
+mtl.writeUCGConfig({
+  appId,
+  config: {
+    // host: 'ma-gateway.test.app.yyuap.com',
+    ishttps: false,
+    default_tp: 'none'
+  }
 })
 
-class Login extends Component{
+class Login extends Component {
   constructor(props) {
     super(props)
   }
@@ -24,27 +30,28 @@ class Login extends Component{
       if (err) {
         console.log('校验失败', values);
       } else {
-        console.log('提交成功', values)
+        this.props.login(values)
       }
     });
   }
 
   render() {
-    const { getFieldProps, getFieldError } = this.props.form;
+    const {getFieldProps, getFieldError} = this.props.form;
     return (
-      <Form >
+      <Form>
         <FormItem>
           <Label>用户名</Label>
           <FormControl placeholder="请输入用户名"
                        {...getFieldProps('user', {
                          validateTrigger: 'onBlur',
+                         initialValue: 'a',
                          rules: [{
                            required: true, message: <span><Icon type="uf-exc-t"></Icon><span>请输入用户名</span></span>,
                          }],
-                       }) }
+                       })}
           />
           <span className='error'>
-                            {getFieldError('username')}
+            {getFieldError('user')}
                         </span>
         </FormItem>
         <FormItem>
@@ -52,17 +59,18 @@ class Login extends Component{
           <FormControl placeholder="请输入密码" type='password'
                        {...getFieldProps('pass', {
                          validateTrigger: 'onBlur',
+                         initialValue: 'a111111',
                          rules: [{
                            required: true, message: <span><Icon type="uf-exc-t"></Icon><span>请输入密码</span></span>,
                          }],
-                       }) }
+                       })}
           />
           <span className='error'>
-                            {getFieldError('password')}
+                            {getFieldError('pass')}
                         </span>
         </FormItem>
-        <FormItem style={{'paddingLeft':'106px'}}>
-          <Button shape="border" className="reset" style={{"marginRight":"8px"}}>取消</Button>
+        <FormItem style={{'paddingLeft': '106px'}}>
+          <Button shape="border" className="reset" style={{"marginRight": "8px"}}>取消</Button>
           <Button colors="primary" className="login" onClick={this.submit}>登录</Button>
         </FormItem>
       </Form>
@@ -72,54 +80,49 @@ class Login extends Component{
 
 const LoginForm = Form.createForm()(Login)
 
-class App extends Component{
+class App extends Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       user: 'a',
       pass: 'a111111'
     }
   }
-  login = () => {
-    const { user, pass } = this.state;
+
+  login = (params) => {
+    mtl.login({
+      params: params,
+      success: (data) => {
+        console.log(data)
+      },
+      fail: (err) => {
+        console.log(err)
+      }
+    })
+  }
+  login1 = () => {
+    const {user, pass} = this.state;
     mtl.callService({
-      appId: appId,
+      appId,
       params: {
         user,
         pass
       },
-      callback: (res) => {
-        console.log(res)
+      success: (data) => {
+        console.log(data)
+      },
+      fail: (err) => {
+        console.log(err)
       }
     })
   }
+
   render() {
     return (
       <div>
-
-
-
-        <div>
-          <input
-            type="text"
-            value={this.state.user}
-            onChange={e => {
-              this.setState({user: e.target.value})
-            }}
-          />
-        </div>
-        <div>
-          <input
-            type="password"
-            value={this.state.pass}
-            onChange={e => {
-              this.setState({pass: e.target.value})
-            }}
-          />
-        </div>
-        <div>
-          <button onClick={this.login}>登陆</button>
-        </div>
+        <LoginForm
+          login={this.login}
+        />
       </div>
     )
 
